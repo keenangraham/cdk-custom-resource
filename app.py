@@ -3,7 +3,7 @@ import os
 
 import aws_cdk as cdk
 
-from shared_infrastructure.cherry_lab import US_WEST_2
+from shared_infrastructure.cherry_lab.environments import US_WEST_2
 
 from cdk_custom_resource.cdk_custom_resource_stack import CustomResourceStack
 

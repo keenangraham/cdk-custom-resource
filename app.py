@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-import os
-
 import aws_cdk as cdk
 
 from shared_infrastructure.cherry_lab.environments import US_WEST_2

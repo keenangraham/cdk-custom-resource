@@ -1,4 +1,5 @@
 import boto3
+import json
 
 
 def get_rds_client():
@@ -44,4 +45,10 @@ def get_latest_rds_snapshot_id(event, context):
         results
     )
     latest_result = get_latest_result(sorted_results)
-    return latest_result
+    # Serialize datetime objects to str.
+    return json.loads(
+        json.dumps(
+            latest_result,
+            default=str,
+        )
+    )

@@ -1,6 +1,23 @@
 import boto3
 import json
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    force=True
+)
+
+
+def log(message):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            logging.info(f'MESSAGE from {func.__name__}: {message}')
+            result = func(*args, **kwargs)
+            logging.info(f'RESULT: {result}')
+        return wrapper
+    return decorator
+
 
 def get_rds_client():
     return boto3.client('rds')
@@ -28,6 +45,7 @@ def sort_results_by_create_time(results):
     )
 
 
+@log(message='Getting latest result')
 def get_latest_result(sorted_results):
     return list(sorted_results)[0]
 

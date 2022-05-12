@@ -1,4 +1,6 @@
 from aws_cdk import Stack
+from aws_cdk import Duration
+
 
 from constructs import Construct
 
@@ -19,4 +21,5 @@ class CustomResourceStack(Stack):
             runtime=Runtime.PYTHON_3_9,
             index='functions.py',
             handler='get_latest_rds_snapshot_id',
+            timeout=Duration.seconds(60),
         )

@@ -15,7 +15,8 @@ def make_query(paginator, **kwargs):
 
 def get_results(query):
     for result in query:
-        yield result['DBSnapshots']
+        for snapshot in result['DBSnapshots']:
+            yield snapshot
 
 
 def sort_results_by_create_time(results):
@@ -27,7 +28,7 @@ def sort_results_by_create_time(results):
 
 
 def get_latest_result(sorted_results):
-    return sorted_results[0]
+    return list(sorted_results)[0]
 
 
 def get_latest_rds_snapshot_id(event, context):

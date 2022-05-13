@@ -1,11 +1,11 @@
 from aws_cdk import Stack
 from aws_cdk import Duration
-
+from aws_cdk import CustomResource
+from aws_cdk import CfnOutput
 
 from constructs import Construct
 
-#from aws_cdk.custom_resource import Provider
-
+from aws_cdk.custom_resources import Provider
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
 from aws_cdk.aws_lambda import Runtime
 
@@ -23,7 +23,7 @@ class CustomResourceStack(Stack):
             entry='cdk_custom_resource/runtime/lambda/',
             runtime=Runtime.PYTHON_3_9,
             index='functions.py',
-            handler='get_latest_rds_snapshot_id',
+            handler='custom_resource_handler',
             timeout=Duration.seconds(60),
         )
 
@@ -31,5 +31,28 @@ class CustomResourceStack(Stack):
             PolicyStatement(
                 actions=['rds:DescribeDBSnapshots'],
                 resources=['*'],
+            )
+        )
+
+        provider = Provider(
+            self,
+            'Provider',
+            on_event_handler=get_latest_rds_snapshot_id,
+        )
+
+        latest_snapshot = CustomResource(
+            self,
+            'LatestRDSSnapshopID',
+            service_token=provider.service_token,
+            properties={
+                'database_id': 'abc123',
+            }
+        )
+
+        CfnOutput(
+            self,
+            'LatestDBSnapshotArn',
+            value=latest_snapshot.get_att_string(
+                'DBSnapshotArn'
             )
         )

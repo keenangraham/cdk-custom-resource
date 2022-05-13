@@ -1,7 +1,13 @@
 import boto3
 import json
+import requests
 
 import logging
+
+
+SUCCESS = 'SUCCESS'
+FAILED = 'FAILED'
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,6 +21,7 @@ def log(message):
             logging.info(f'MESSAGE from {func.__name__}: {message}')
             result = func(*args, **kwargs)
             logging.info(f'RESULT: {result}')
+            return result
         return wrapper
     return decorator
 
@@ -51,10 +58,6 @@ def get_latest_result(sorted_results):
 
 
 def get_latest_rds_snapshot_id(event, context):
-    print('In get latest snapshot')
-    print('event', event)
-    print('context', context)
-
     client = get_rds_client()
     paginator = get_describe_db_snapshots_paginator(client)
     query = make_query(paginator)
@@ -70,3 +73,15 @@ def get_latest_rds_snapshot_id(event, context):
             default=str,
         )
     )
+
+
+def on_create(event, context):
+    data = get_latest_rds_snapshot_id(event, context)
+    return {
+        'Data': data
+    }
+
+
+def custom_resource_handler(event, context):
+    if event['RequestType'] == 'Create':
+        return on_create(event, context)

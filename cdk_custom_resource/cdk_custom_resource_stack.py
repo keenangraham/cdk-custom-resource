@@ -8,6 +8,7 @@ from constructs import Construct
 from aws_cdk.custom_resources import Provider
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
 from aws_cdk.aws_lambda import Runtime
+from aws_cdk.aws_logs import RetentionDays
 
 from aws_cdk.aws_iam import PolicyStatement
 
@@ -38,6 +39,7 @@ class CustomResourceStack(Stack):
             self,
             'Provider',
             on_event_handler=get_latest_rds_snapshot_id,
+            log_retention=RetentionDays.ONE_MONTH,
         )
 
         latest_snapshot = CustomResource(

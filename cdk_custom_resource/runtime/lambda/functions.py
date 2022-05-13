@@ -1,12 +1,7 @@
 import boto3
 import json
-import requests
 
 import logging
-
-
-SUCCESS = 'SUCCESS'
-FAILED = 'FAILED'
 
 
 logging.basicConfig(

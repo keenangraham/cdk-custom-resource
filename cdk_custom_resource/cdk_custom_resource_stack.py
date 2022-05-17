@@ -16,14 +16,16 @@ from aws_cdk.aws_iam import PolicyStatement
 from aws_cdk.aws_rds import DatabaseInstanceFromSnapshot
 from aws_cdk.aws_rds import DatabaseInstanceEngine
 from aws_cdk.aws_rds import PostgresEngineVersion
+from aws_cdk.aws_rds import SnapshotCredentials
 
-from shared_infrastructure.cherry_lab.vpcs import VPCs
 from aws_cdk.aws_ec2 import SubnetSelection
 from aws_cdk.aws_ec2 import SubnetType
 from aws_cdk.aws_ec2 import InstanceClass
 from aws_cdk.aws_ec2 import InstanceType
 from aws_cdk.aws_ec2 import InstanceSize
-from aws_cdk.aws_ec2 import SecurityGroup
+
+
+from shared_infrastructure.igvf_dev.network import DemoNetwork
 
 
 class CustomResourceStack(Stack):
@@ -60,21 +62,23 @@ class CustomResourceStack(Stack):
             'LatestRDSSnapshopID',
             service_token=provider.service_token,
             properties={
-                'db_instance_identifier': 'lrowe-graphql-demo-rds',
+                'db_instance_identifier': 'ip197tomb39f7o0',
             }
+        )
+
+        latest_snapshot_arn = latest_snapshot.get_att_string(
+             'DBSnapshotArn'
         )
 
         CfnOutput(
             self,
             'LatestDBSnapshotArn',
-            value=latest_snapshot.get_att_string(
-                'DBSnapshotArn'
-            )
+            value=latest_snapshot_arn,
         )
 
-        vpcs = VPCs(
+        demo_network = DemoNetwork(
             self,
-            'VPCs'
+            'DemoNetwork',
         )
 
         database = DatabaseInstanceFromSnapshot(
@@ -83,15 +87,18 @@ class CustomResourceStack(Stack):
             snapshot_identifier=latest_snapshot.get_att_string(
                 'DBSnapshotArn'
             ),
+            credentials=SnapshotCredentials.from_generated_secret(
+                'postgres',
+            ),
             engine=DatabaseInstanceEngine.postgres(
                 version=PostgresEngineVersion.VER_14_1
             ),
             vpc_subnets=SubnetSelection(
-                subnet_type=SubnetType.PUBLIC,
+                subnet_type=SubnetType.PRIVATE_ISOLATED
             ),
-            vpc=vpcs.default_vpc,
-            allocated_storage=20,
-            max_allocated_storage=30,
+            vpc=demo_network.vpc,
+            allocated_storage=10,
+            max_allocated_storage=20,
             instance_type=InstanceType.of(
                 InstanceClass.BURSTABLE3,
                 InstanceSize.MEDIUM,
@@ -100,6 +107,10 @@ class CustomResourceStack(Stack):
         )
 
         Tags.of(database).add(
-            'new_tag',
-            'from snapshot db',
+            'from_snapshot',
+            latest_snapshot_arn,
+        )
+        Tags.of(database).add(
+            'branch',
+            'my-new-feature-branch-better-override',
         )

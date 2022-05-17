@@ -53,9 +53,13 @@ def get_latest_result(sorted_results):
 
 
 def get_latest_rds_snapshot_id(event, context):
+    db_instance_identifier = event['ResourceProperties']['db_instance_identifier']
     client = get_rds_client()
     paginator = get_describe_db_snapshots_paginator(client)
-    query = make_query(paginator)
+    query = make_query(
+        paginator,
+        DBInstanceIdentifier=db_instance_identifier,
+    )
     results = get_results(query)
     sorted_results = sort_results_by_create_time(
         results

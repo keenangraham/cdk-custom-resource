@@ -1,4 +1,5 @@
 from aws_cdk import Stack
+from aws_cdk import Tags
 from aws_cdk import Duration
 from aws_cdk import CustomResource
 from aws_cdk import CfnOutput
@@ -11,6 +12,18 @@ from aws_cdk.aws_lambda import Runtime
 from aws_cdk.aws_logs import RetentionDays
 
 from aws_cdk.aws_iam import PolicyStatement
+
+from aws_cdk.aws_rds import DatabaseInstanceFromSnapshot
+from aws_cdk.aws_rds import DatabaseInstanceEngine
+from aws_cdk.aws_rds import PostgresEngineVersion
+
+from shared_infrastructure.cherry_lab.vpcs import VPCs
+from aws_cdk.aws_ec2 import SubnetSelection
+from aws_cdk.aws_ec2 import SubnetType
+from aws_cdk.aws_ec2 import InstanceClass
+from aws_cdk.aws_ec2 import InstanceType
+from aws_cdk.aws_ec2 import InstanceSize
+from aws_cdk.aws_ec2 import SecurityGroup
 
 
 class CustomResourceStack(Stack):
@@ -47,7 +60,7 @@ class CustomResourceStack(Stack):
             'LatestRDSSnapshopID',
             service_token=provider.service_token,
             properties={
-                'database_id': 'abc123',
+                'db_instance_identifier': 'lrowe-graphql-demo-rds',
             }
         )
 
@@ -57,4 +70,36 @@ class CustomResourceStack(Stack):
             value=latest_snapshot.get_att_string(
                 'DBSnapshotArn'
             )
+        )
+
+        vpcs = VPCs(
+            self,
+            'VPCs'
+        )
+
+        database = DatabaseInstanceFromSnapshot(
+            self,
+            'DatabaseFromSnapshot',
+            snapshot_identifier=latest_snapshot.get_att_string(
+                'DBSnapshotArn'
+            ),
+            engine=DatabaseInstanceEngine.postgres(
+                version=PostgresEngineVersion.VER_14_1
+            ),
+            vpc_subnets=SubnetSelection(
+                subnet_type=SubnetType.PUBLIC,
+            ),
+            vpc=vpcs.default_vpc,
+            allocated_storage=20,
+            max_allocated_storage=30,
+            instance_type=InstanceType.of(
+                InstanceClass.BURSTABLE3,
+                InstanceSize.MEDIUM,
+            ),
+            copy_tags_to_snapshot=False,
+        )
+
+        Tags.of(database).add(
+            'new_tag',
+            'from snapshot db',
         )

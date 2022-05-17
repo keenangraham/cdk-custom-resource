@@ -1,1 +1,2 @@
 pytest==6.2.5
+git+https://github.com/IGVF-DACC/shared-infrastructure@main#egg=shared_infrastructure
